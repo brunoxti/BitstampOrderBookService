@@ -13,5 +13,19 @@ namespace BitstampOrderBookService.src.Presentation.Controllers
         {
             _pricingService = pricingService;
         }
+
+        [HttpGet("simulate")]
+        public async Task<IActionResult> SimulateBestPrice(string operation, string instrument, int quantity)
+        {
+            try
+            {
+                var result = await _pricingService.SimulatePriceAsync(instrument, operation, quantity);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
