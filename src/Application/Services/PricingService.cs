@@ -10,10 +10,12 @@ namespace BitstampOrderBookService.src.Application.Services
     public class PricingService : IPricingService
     {
         private readonly IMongoCollection<OrderBook> _orderBookCollection;
+        private readonly IMongoCollection<PriceSimulationResult> _simulationResultsCollection;
 
-        public PricingService(IMongoDatabase database)
+        public PricingService(IMongoDatabase database, IMongoCollection<PriceSimulationResult> simulationResultsCollection)
         {
             _orderBookCollection = database.GetCollection<OrderBook>("orderbooks");
+            _simulationResultsCollection = simulationResultsCollection;
         }
 
         public async Task<PriceSimulationResult> SimulatePriceAsync(string pair, string operation, decimal quantity)
@@ -54,6 +56,8 @@ namespace BitstampOrderBookService.src.Application.Services
                 TotalCost = totalCost,
                 OrdersUsed = ordersUsed
             };
+
+            await _simulationResultsCollection.InsertOneAsync(result).ConfigureAwait(false);
 
             return result;
         }

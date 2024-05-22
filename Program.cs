@@ -1,5 +1,6 @@
 using BitstampOrderBookService.src.Application.Interfaces;
 using BitstampOrderBookService.src.Application.Services;
+using BitstampOrderBookService.src.Domain.ValueObjects;
 using BitstampOrderBookService.src.Infrastructure.Data;
 using BitstampOrderBookService.src.Infrastructure.Repository;
 using Microsoft.Extensions.Options;
@@ -31,6 +32,12 @@ builder.Services.AddScoped<IOrderBookRepository, OrderBookRepository>();
 builder.Services.AddScoped<IBitstampWebSocketService, BitstampWebSocketService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 builder.Services.AddScoped<IPricingService, PricingService>();
+
+builder.Services.AddSingleton(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    return database.GetCollection<PriceSimulationResult>("simulationresults");
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
