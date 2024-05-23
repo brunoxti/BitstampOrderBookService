@@ -1,6 +1,6 @@
-﻿using BitstampOrderBookService.src.Domain.ValueObjects;
+﻿using BitstampOrderBookService.Domain.ValueObjects;
 
-namespace BitstampOrderBookService.src.Application.Interfaces
+namespace BitstampOrderBookService.Application.Interfaces
 {
     public interface IPricingService
     {

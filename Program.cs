@@ -1,8 +1,8 @@
-using BitstampOrderBookService.src.Application.Interfaces;
-using BitstampOrderBookService.src.Application.Services;
-using BitstampOrderBookService.src.Domain.ValueObjects;
-using BitstampOrderBookService.src.Infrastructure.Data;
-using BitstampOrderBookService.src.Infrastructure.Repository;
+using BitstampOrderBookService.Application.Interfaces;
+using BitstampOrderBookService.Application.Services;
+using BitstampOrderBookService.Domain.ValueObjects;
+using BitstampOrderBookService.Infrastructure.Data;
+using BitstampOrderBookService.Infrastructure.Repository;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 

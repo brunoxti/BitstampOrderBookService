@@ -1,4 +1,4 @@
-﻿namespace BitstampOrderBookService.src.Infrastructure.Data
+﻿namespace BitstampOrderBookService.Infrastructure.Data
 {
     public class MongoDbSettings
     {

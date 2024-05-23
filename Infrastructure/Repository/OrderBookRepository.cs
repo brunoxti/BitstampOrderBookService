@@ -1,8 +1,8 @@
-﻿using BitstampOrderBookService.src.Domain.Entities;
-using BitstampOrderBookService.src.Infrastructure.Data;
+﻿using BitstampOrderBookService.Domain.Entities;
+using BitstampOrderBookService.Infrastructure.Data;
 using MongoDB.Driver;
 
-namespace BitstampOrderBookService.src.Infrastructure.Repository
+namespace BitstampOrderBookService.Infrastructure.Repository
 {
     public class OrderBookRepository : IOrderBookRepository
     {

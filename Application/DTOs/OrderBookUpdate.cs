@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace BitstampOrderBookService.src.Application.DTOs
+namespace BitstampOrderBookService.Application.DTOs
 {
 
     public class OrderBookUpdate

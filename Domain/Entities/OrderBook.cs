@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
 
-namespace BitstampOrderBookService.src.Domain.Entities
+namespace BitstampOrderBookService.Domain.Entities
 {
     public class OrderBook
     {
@@ -36,7 +36,7 @@ namespace BitstampOrderBookService.src.Domain.Entities
         {
             Bids.Add(bid);
         }
-     
+
         public IReadOnlyList<Order> GetAsks() => Asks.AsReadOnly();
         public IReadOnlyList<Order> GetBids() => Bids.AsReadOnly();
     }

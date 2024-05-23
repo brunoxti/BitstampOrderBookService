@@ -1,4 +1,4 @@
-﻿namespace BitstampOrderBookService.src.Application.Interfaces
+﻿namespace BitstampOrderBookService.Application.Interfaces
 {
     public interface IStatisticsService
     {

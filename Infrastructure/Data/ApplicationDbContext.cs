@@ -1,7 +1,7 @@
-﻿using BitstampOrderBookService.src.Domain.Entities;
+﻿using BitstampOrderBookService.Domain.Entities;
 using MongoDB.Driver;
 
-namespace BitstampOrderBookService.src.Infrastructure.Data
+namespace BitstampOrderBookService.Infrastructure.Data
 {
     public class ApplicationDbContext
     {

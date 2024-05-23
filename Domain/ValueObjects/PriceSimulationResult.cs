@@ -1,8 +1,8 @@
-﻿using BitstampOrderBookService.src.Domain.Entities;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
+using BitstampOrderBookService.Domain.Entities;
 
-namespace BitstampOrderBookService.src.Domain.ValueObjects
+namespace BitstampOrderBookService.Domain.ValueObjects
 {
 
     public class PriceSimulationResult

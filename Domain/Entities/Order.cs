@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
 
-namespace BitstampOrderBookService.src.Domain.Entities
+namespace BitstampOrderBookService.Domain.Entities
 {
     public class Order
     {

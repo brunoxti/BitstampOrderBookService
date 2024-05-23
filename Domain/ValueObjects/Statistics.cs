@@ -1,4 +1,4 @@
-﻿namespace BitstampOrderBookService.src.Domain.ValueObjects
+﻿namespace BitstampOrderBookService.Domain.ValueObjects
 {
     public sealed class Statistics
     {

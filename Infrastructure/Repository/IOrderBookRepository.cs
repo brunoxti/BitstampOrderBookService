@@ -1,6 +1,6 @@
-﻿using BitstampOrderBookService.src.Domain.Entities;
+﻿using BitstampOrderBookService.Domain.Entities;
 
-namespace BitstampOrderBookService.src.Infrastructure.Repository
+namespace BitstampOrderBookService.Infrastructure.Repository
 {
     public interface IOrderBookRepository
     {
