@@ -2,7 +2,6 @@
 {
     public interface IBitstampWebSocketService
     {
-        Task HandleWebSocketMessageAsync(string message);
-        Task ConnectAsync(string[] intruments);
+        Task ConnectAsync(string[] intruments, CancellationToken cancellationToken);
     }
 }

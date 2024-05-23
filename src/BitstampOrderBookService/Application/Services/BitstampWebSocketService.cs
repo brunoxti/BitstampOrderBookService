@@ -1,82 +1,42 @@
 ﻿using BitstampOrderBookService.Application.DTOs;
 using BitstampOrderBookService.Application.Interfaces;
 using BitstampOrderBookService.Domain.Entities;
+using BitstampOrderBookService.Infrastructure.WebSocket;
 using MongoDB.Driver;
 using System.Collections.Concurrent;
-using System.Net.WebSockets;
-using System.Text;
 using System.Text.Json;
 
 namespace BitstampOrderBookService.Application.Services
 {
     public class BitstampWebSocketService : IBitstampWebSocketService
     {
-        private ClientWebSocket _webSocket;
+        private readonly IWebSocketClient _webSocketClient;
         private readonly IMongoCollection<OrderBook> _orderBookCollection;
         private readonly ConcurrentDictionary<string, OrderBook> _orderBooks = new();
 
-        public BitstampWebSocketService(IMongoDatabase database)
+        public BitstampWebSocketService(IWebSocketClient webSocketClient, IMongoDatabase database)
         {
+            _webSocketClient = webSocketClient;
             _orderBookCollection = database.GetCollection<OrderBook>("orderbooks");
         }
 
-        public async Task ConnectAsync(string[] pairs)
+        public async Task ConnectAsync(string[] pairs, CancellationToken cancellationToken)
         {
-            _webSocket = new ClientWebSocket();
+          
 
-            await _webSocket.ConnectAsync(new Uri("wss://ws.bitstamp.net"), CancellationToken.None);
+            await _webSocketClient.ConnectAsync(new Uri("wss://ws.bitstamp.net"), CancellationToken.None);
 
             foreach (var pair in pairs)
             {
-                await SubscribeToChannelAsync(pair);
+                await _webSocketClient.SubscribeOrderBook(pair);
             }
-        }
 
-        private async Task SubscribeToChannelAsync(string pair)
-        {
-            var subscribeMessage = new
+            _webSocketClient.OnMessageReceived += async (message) =>
             {
-                @event = "bts:subscribe",
-                data = new
-                {
-                    channel = $"order_book_{pair}"
-                }
+                await HandleWebSocketMessageAsync(message);
             };
 
-            var messageJson = JsonSerializer.Serialize(subscribeMessage);
-            var bytes = Encoding.UTF8.GetBytes(messageJson);
-            var segment = new ArraySegment<byte>(bytes);
-
-            await _webSocket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
-
-            await ReceiveMessageAsync();
-        }
-
-        private async Task ReceiveMessageAsync()
-        {
-            var buffer = new byte[1024 * 16];
-            var stringBuilder = new StringBuilder();
-
-            while (_webSocket.State == WebSocketState.Open)
-            {
-                var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-                }
-                else
-                {
-                    var messagePart = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    stringBuilder.Append(messagePart);
-
-                    if (result.EndOfMessage)
-                    {
-                        var completeMessage = stringBuilder.ToString();
-                        await HandleWebSocketMessageAsync(completeMessage);
-                        stringBuilder.Clear();
-                    }
-                }
-            }
+            await _webSocketClient.ReceiveMessages(cancellationToken);
         }
 
         public async Task HandleWebSocketMessageAsync(string message)
