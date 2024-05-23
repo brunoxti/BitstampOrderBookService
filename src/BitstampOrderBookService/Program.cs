@@ -8,12 +8,6 @@ using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-builder.Services.AddSingleton<ApplicationDbContext>();
-builder.Services.AddSingleton<BitstampWebSocketService>();
-builder.Services.AddSingleton<StatisticsService>();
-builder.Services.AddSingleton<PricingService>();
-
 builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection(nameof(MongoDbSettings)));
 
@@ -28,6 +22,7 @@ builder.Services.AddSingleton(sp =>
 });
 
 builder.Services.AddSingleton<ApplicationDbContext>();
+
 builder.Services.AddScoped<IOrderBookRepository, OrderBookRepository>();
 builder.Services.AddScoped<IBitstampWebSocketService, BitstampWebSocketService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
@@ -55,11 +50,16 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-var webSocketService = app.Services.GetRequiredService<BitstampWebSocketService>();
-var statisticsService = app.Services.GetRequiredService<StatisticsService>();
-var webSocketSettings = app.Services.GetRequiredService<IOptions<WebSocketSettings>>().Value;
+using (var scope = app.Services.CreateScope())
+{
+    var scopedServices = scope.ServiceProvider;
 
-Task.Run(() => webSocketService.ConnectAsync(webSocketSettings.Instruments));
-Task.Run(() => statisticsService.PrintStatistics());
+    var webSocketService = scopedServices.GetRequiredService<IBitstampWebSocketService>();
+    var statisticsService = scopedServices.GetRequiredService<IStatisticsService>();
+    var webSocketSettings = scopedServices.GetRequiredService<IOptions<WebSocketSettings>>().Value;
+
+    Task.Run(() => webSocketService.ConnectAsync(webSocketSettings.Instruments));
+    Task.Run(() => statisticsService.PrintStatistics());
+}
 
 app.Run();

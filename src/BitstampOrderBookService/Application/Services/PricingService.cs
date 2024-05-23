@@ -1,6 +1,7 @@
 ﻿using BitstampOrderBookService.Application.Interfaces;
 using BitstampOrderBookService.Domain.Entities;
 using BitstampOrderBookService.Domain.ValueObjects;
+using BitstampOrderBookService.Infrastructure.Repository;
 using MongoDB.Driver;
 using System.Diagnostics.Metrics;
 
@@ -8,19 +9,26 @@ namespace BitstampOrderBookService.Application.Services
 {
     public class PricingService : IPricingService
     {
-        private readonly IMongoCollection<OrderBook> _orderBookCollection;
+        private readonly IOrderBookRepository _orderBookRepository;
         private readonly IMongoCollection<PriceSimulationResult> _simulationResultsCollection;
 
-        public PricingService(IMongoDatabase database, IMongoCollection<PriceSimulationResult> simulationResultsCollection)
+        public PricingService(IOrderBookRepository orderBookRepository, IMongoCollection<PriceSimulationResult> simulationResultsCollection)
         {
-            _orderBookCollection = database.GetCollection<OrderBook>("orderbooks");
+            _orderBookRepository = orderBookRepository;
             _simulationResultsCollection = simulationResultsCollection;
         }
 
         public async Task<PriceSimulationResult> SimulatePriceAsync(string pair, string operation, decimal quantity)
         {
             var filter = Builders<OrderBook>.Filter.Eq(o => o.Pair, pair.ToLower());
-            var orderBook = await _orderBookCollection.Find(filter).SortByDescending(o => o.Timestamp).FirstOrDefaultAsync().ConfigureAwait(false) ?? throw new Exception("Order book not found for the given instrument.");
+            var orderBooks = await _orderBookRepository.FindOrderBooksAsync(filter);
+
+            if (!orderBooks.Any())
+            {
+                throw new Exception("Order book not found for the given instrument.");
+            }
+            var orderBook = orderBooks.OrderByDescending(o => o.Timestamp).FirstOrDefault();
+
             var orders = operation.ToLower() == "buy"
                 ? orderBook.GetAsks().OrderBy(o => o.Price).ToList()
                 : orderBook.GetBids().OrderByDescending(o => o.Price).ToList();

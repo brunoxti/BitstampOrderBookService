@@ -7,10 +7,11 @@ namespace BitstampOrderBookService.Infrastructure.Repository
     public class OrderBookRepository : IOrderBookRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMongoCollection<OrderBook> _orderBookCollection;
 
-        public OrderBookRepository(ApplicationDbContext context)
+       public OrderBookRepository(IMongoDatabase database)
         {
-            _context = context;
+            _orderBookCollection = database.GetCollection<OrderBook>("orderbooks");
         }
 
         public async Task InsertOrderBookAsync(OrderBook orderBook)
@@ -28,6 +29,11 @@ namespace BitstampOrderBookService.Infrastructure.Repository
                 .Find(ob => ob.Pair == pair)
                 .SortByDescending(ob => ob.Timestamp)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<OrderBook>> FindOrderBooksAsync(FilterDefinition<OrderBook> filter, FindOptions options = null)
+        {
+            return await _orderBookCollection.Find(filter, options).ToListAsync();
         }
     }
 }

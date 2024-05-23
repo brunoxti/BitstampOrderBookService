@@ -1,11 +1,13 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
+using System.Text.Json.Serialization;
 
 namespace BitstampOrderBookService.Domain.Entities
 {
     public class Order
     {
         [BsonId]
+        [JsonIgnore]
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; private set; }
         public decimal Price { get; private set; }

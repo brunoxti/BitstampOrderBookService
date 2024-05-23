@@ -1,4 +1,4 @@
-﻿using BitstampOrderBookService.Application.Services;
+﻿using BitstampOrderBookService.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BitstampOrderBookService.Presentation.Controllers
@@ -7,9 +7,9 @@ namespace BitstampOrderBookService.Presentation.Controllers
     [Route("api/[controller]")]
     public class PricingController : ControllerBase
     {
-        private readonly PricingService _pricingService;
+        private readonly IPricingService _pricingService;
 
-        public PricingController(PricingService pricingService)
+        public PricingController(IPricingService pricingService)
         {
             _pricingService = pricingService;
         }
