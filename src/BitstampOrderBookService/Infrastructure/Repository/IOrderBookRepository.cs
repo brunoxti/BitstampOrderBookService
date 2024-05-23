@@ -5,7 +5,6 @@ namespace BitstampOrderBookService.Infrastructure.Repository
 {
     public interface IOrderBookRepository
     {
-        Task<OrderBook> GetLatestOrderBookAsync(string pair);
         Task InsertOrderBookAsync(OrderBook orderBook);
         Task<List<OrderBook>> FindOrderBooksAsync(FilterDefinition<OrderBook> filter, FindOptions options = null);
     }
