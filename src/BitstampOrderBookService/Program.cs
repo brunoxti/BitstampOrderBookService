@@ -3,6 +3,7 @@ using BitstampOrderBookService.Application.Services;
 using BitstampOrderBookService.Domain.ValueObjects;
 using BitstampOrderBookService.Infrastructure.Data;
 using BitstampOrderBookService.Infrastructure.Repository;
+using BitstampOrderBookService.Infrastructure.WebSocket;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
@@ -23,6 +24,7 @@ builder.Services.AddSingleton(sp =>
 
 builder.Services.AddSingleton<ApplicationDbContext>();
 
+builder.Services.AddSingleton<IWebSocketClient, WebSocketClient>();
 builder.Services.AddScoped<IOrderBookRepository, OrderBookRepository>();
 builder.Services.AddScoped<IBitstampWebSocketService, BitstampWebSocketService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
@@ -58,7 +60,7 @@ using (var scope = app.Services.CreateScope())
     var statisticsService = scopedServices.GetRequiredService<IStatisticsService>();
     var webSocketSettings = scopedServices.GetRequiredService<IOptions<WebSocketSettings>>().Value;
 
-    Task.Run(() => webSocketService.ConnectAsync(webSocketSettings.Instruments));
+    Task.Run(() => webSocketService.ConnectAsync(webSocketSettings.Instruments, CancellationToken.None));
     Task.Run(() => statisticsService.PrintStatistics());
 }
 
