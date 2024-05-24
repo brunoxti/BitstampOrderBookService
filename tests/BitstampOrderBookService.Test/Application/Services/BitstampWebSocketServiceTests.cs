@@ -212,5 +212,38 @@ namespace BitstampOrderBookService.Tests.UnitTests.Application.Services
             Assert.Throws<ArgumentNullException>(act);
         }
 
+        [Fact]
+        public async Task ConnectAsync_Should_HandleExceptions()
+        {
+            // Arrange
+            var uri = "wss://ws.bitstamp.net";
+            var cancellationToken = CancellationToken.None;
+            _mockWebSocketClient.Setup(client => client.SubscribeOrderBook(It.IsAny<string>(), cancellationToken))
+                                .ThrowsAsync(new Exception("Subscription error"));
+
+            var consoleOutput = new StringWriter();
+            Console.SetOut(consoleOutput);
+
+            // Act
+            await _service.ConnectAsync(uri, cancellationToken);
+
+            // Assert
+            var output = consoleOutput.ToString();
+            Assert.Contains("Subscription error", output);
+        }
+
+        [Fact]
+        public async Task HandleWebSocketMessageAsync_Should_NotProcessIfOrderBookUpdateIsNull()
+        {
+            // Arrange
+            string nullMessage = "{}";
+
+            // Act
+            await _service.HandleWebSocketMessageAsync(nullMessage);
+
+            // Assert
+            _mockOrderBookRepository.Verify(repo => repo.InsertOrderBookAsync(It.IsAny<OrderBook>()), Times.Never);
+        }
+
     }
 }
