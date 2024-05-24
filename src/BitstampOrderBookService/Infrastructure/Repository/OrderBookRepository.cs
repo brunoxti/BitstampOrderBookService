@@ -20,7 +20,6 @@ namespace BitstampOrderBookService.Infrastructure.Repository
             try
             {
                 await _orderBookCollection.InsertOneAsync(orderBook);
-                _logger.LogInformation($"Inserted OrderBook for {orderBook.Pair} at {orderBook.Timestamp}");
             }
             catch (Exception ex)
             {

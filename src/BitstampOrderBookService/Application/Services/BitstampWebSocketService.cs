@@ -1,6 +1,7 @@
 ﻿using BitstampOrderBookService.Application.DTOs;
 using BitstampOrderBookService.Application.Interfaces;
 using BitstampOrderBookService.Domain.Entities;
+using BitstampOrderBookService.Infrastructure.Repository;
 using BitstampOrderBookService.Infrastructure.WebSocket;
 using MongoDB.Driver;
 using System.Collections.Concurrent;
@@ -11,13 +12,13 @@ namespace BitstampOrderBookService.Application.Services
     public class BitstampWebSocketService : IBitstampWebSocketService
     {
         private readonly IWebSocketClient _webSocketClient;
-        private readonly IMongoCollection<OrderBook> _orderBookCollection;
+        private readonly IOrderBookRepository _orderBookRepository;
         private readonly ConcurrentDictionary<string, OrderBook> _orderBooks = new();
 
-        public BitstampWebSocketService(IWebSocketClient webSocketClient, IMongoDatabase database)
+        public BitstampWebSocketService(IWebSocketClient webSocketClient, IOrderBookRepository orderBookRepository)
         {
             _webSocketClient = webSocketClient;
-            _orderBookCollection = database.GetCollection<OrderBook>("orderbooks");
+            _orderBookRepository = orderBookRepository;
         }
 
         public async Task ConnectAsync(string[] pairs, CancellationToken cancellationToken)
@@ -61,7 +62,7 @@ namespace BitstampOrderBookService.Application.Services
                 }
 
                 _orderBooks[orderBook.Pair] = orderBook;
-                await _orderBookCollection.InsertOneAsync(orderBook);
+                await _orderBookRepository.InsertOrderBookAsync(orderBook);
             }
         }
     }
