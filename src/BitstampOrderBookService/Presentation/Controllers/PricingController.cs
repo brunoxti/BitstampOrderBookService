@@ -27,5 +27,11 @@ namespace BitstampOrderBookService.Presentation.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        [HttpGet("simulations")]
+        public async Task<IActionResult> GetAllSimulations()
+        {
+            var results = await _pricingService.GetAllSimulationsAsync();
+            return Ok(results);
+        }
     }
 }

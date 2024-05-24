@@ -69,5 +69,10 @@ namespace BitstampOrderBookService.Application.Services
             return result;
         }
 
+        public async Task<List<PriceSimulationResult>> GetAllSimulationsAsync()
+        {
+            return await _simulationResultsCollection.Find(_ => true).ToListAsync();
+        }
+
     }
 }
