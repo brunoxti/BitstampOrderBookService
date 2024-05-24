@@ -1,5 +1,6 @@
 using BitstampOrderBookService.Application.Interfaces;
 using BitstampOrderBookService.Application.Services;
+using BitstampOrderBookService.Configuration;
 using BitstampOrderBookService.Domain.ValueObjects;
 using BitstampOrderBookService.Infrastructure.Data;
 using BitstampOrderBookService.Infrastructure.Repository;
@@ -12,8 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection(nameof(MongoDbSettings)));
 
-builder.Services.Configure<WebSocketSettings>(
-    builder.Configuration.GetSection(nameof(WebSocketSettings)));
+builder.Services.Configure<ValidPairsOptions>(
+    builder.Configuration.GetSection("ValidPairs"));
 
 builder.Services.AddSingleton(sp =>
 {
@@ -58,9 +59,8 @@ using (var scope = app.Services.CreateScope())
 
     var webSocketService = scopedServices.GetRequiredService<IBitstampWebSocketService>();
     var statisticsService = scopedServices.GetRequiredService<IStatisticsService>();
-    var webSocketSettings = scopedServices.GetRequiredService<IOptions<WebSocketSettings>>().Value;
 
-    Task.Run(() => webSocketService.ConnectAsync(webSocketSettings.Instruments, CancellationToken.None));
+    Task.Run(() => webSocketService.ConnectAsync(CancellationToken.None));
     Task.Run(() => statisticsService.PrintStatistics());
 }
 
