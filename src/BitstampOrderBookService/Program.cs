@@ -28,6 +28,7 @@ builder.Services.AddSingleton(sp =>
 
 builder.Services.AddSingleton<ApplicationDbContext>();
 
+builder.Services.AddSingleton<IClientWebSocket, ClientWebSocketWrapper>();
 builder.Services.AddSingleton<IWebSocketClient, WebSocketClient>();
 builder.Services.AddScoped<IOrderBookRepository, OrderBookRepository>();
 builder.Services.AddScoped<IBitstampWebSocketService, BitstampWebSocketService>();

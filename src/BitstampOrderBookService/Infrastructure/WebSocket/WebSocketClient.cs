@@ -6,15 +6,15 @@ namespace BitstampOrderBookService.Infrastructure.WebSocket
 {
     public class WebSocketClient : IWebSocketClient
     {
-        private ClientWebSocket _clientWebSocket;
+        private IClientWebSocket _clientWebSocket;
         private readonly ILogger<WebSocketClient> _logger;
         private readonly object _syncRoot = new();
 
         public WebSocketState State => _clientWebSocket.State;
 
-        public WebSocketClient(ILogger<WebSocketClient> logger)
+        public WebSocketClient(IClientWebSocket clientWebSocket, ILogger<WebSocketClient> logger)
         {
-            _clientWebSocket = new ClientWebSocket();
+            _clientWebSocket = clientWebSocket;
             _logger = logger;
         }
 
@@ -27,6 +27,7 @@ namespace BitstampOrderBookService.Infrastructure.WebSocket
 
         public async Task ConnectAsync(Uri uri, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Connecting to WebSocket...");
             try 
             {
                 lock (_syncRoot)
@@ -34,11 +35,10 @@ namespace BitstampOrderBookService.Infrastructure.WebSocket
                     if (_clientWebSocket == null || _clientWebSocket.State != WebSocketState.Open)
                     {
                         _clientWebSocket?.Dispose();
-                        _clientWebSocket = new ClientWebSocket();
+                        _clientWebSocket = new ClientWebSocketWrapper();
                     }
                 }
 
-                _logger.LogInformation("Connecting to WebSocket...");
                 await _clientWebSocket.ConnectAsync(uri, cancellationToken);
                 _logger.LogInformation("WebSocket connection established.");
             } catch (Exception e)

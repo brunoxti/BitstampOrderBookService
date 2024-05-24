@@ -51,7 +51,10 @@ namespace BitstampOrderBookService.Application.Services
             if (orderBookUpdate != null && orderBookUpdate.Event == "data")
             {
                 var pair = orderBookUpdate.Channel.Replace("order_book_", "").ToLower();
-                
+                if (!_validPairs.Pairs.Contains(pair))
+                {
+                    return;
+                }
                 var orderBook = new OrderBook(
                     pair,
                     DateTimeOffset.FromUnixTimeSeconds(long.Parse(orderBookUpdate.Data.Timestamp)).UtcDateTime

@@ -13,10 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BitstampOrderBookService.Te
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTests", "UnitTests", "{F76E9F75-BEB5-4744-857A-EC1F8CE2E946}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IntegrationTests", "IntegrationTests", "{A54576BA-216A-41D9-AF11-0E0B04AA9C85}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BitstampOrderBookService.Tests.Integration", "tests\BitstampOrderBookService.Tests.Integration\BitstampOrderBookService.Tests.Integration.csproj", "{FBD0F94A-D727-473C-B0A7-65589520063B}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,10 +27,6 @@ Global
 		{AF68E66C-77FC-44AE-9D83-DE6900968F67}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF68E66C-77FC-44AE-9D83-DE6900968F67}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF68E66C-77FC-44AE-9D83-DE6900968F67}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FBD0F94A-D727-473C-B0A7-65589520063B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FBD0F94A-D727-473C-B0A7-65589520063B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FBD0F94A-D727-473C-B0A7-65589520063B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FBD0F94A-D727-473C-B0A7-65589520063B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -43,8 +35,6 @@ Global
 		{A38B318D-F364-4D68-ABF7-C6AE8CDA4DB1} = {699E0E59-8899-49F5-BEF9-D51F3EC2D310}
 		{AF68E66C-77FC-44AE-9D83-DE6900968F67} = {F76E9F75-BEB5-4744-857A-EC1F8CE2E946}
 		{F76E9F75-BEB5-4744-857A-EC1F8CE2E946} = {88B3F213-5E62-4951-AD86-D724DE487B27}
-		{A54576BA-216A-41D9-AF11-0E0B04AA9C85} = {88B3F213-5E62-4951-AD86-D724DE487B27}
-		{FBD0F94A-D727-473C-B0A7-65589520063B} = {A54576BA-216A-41D9-AF11-0E0B04AA9C85}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D59ABB1E-4427-482E-BF2E-30BBF85E14C3}
