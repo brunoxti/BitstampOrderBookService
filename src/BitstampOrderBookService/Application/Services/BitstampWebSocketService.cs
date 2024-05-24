@@ -25,55 +25,55 @@ namespace BitstampOrderBookService.Application.Services
             _webSocketClient = webSocketClient;
             _webSocketClient.OnMessageReceived += async (message) => await HandleWebSocketMessageAsync(message);
         }
-        
+
         public async Task ConnectAsync(string uri, CancellationToken cancellationToken)
         {
-            await _webSocketClient.ConnectAsync(new Uri(uri), cancellationToken);
 
-            foreach (var pair in _validPairs.Pairs)
+            await _webSocketClient.ConnectAsync(new Uri(uri), cancellationToken);
+            try
             {
-                if (_validPairs.Pairs.Contains(pair.ToLower()))
+                foreach (var pair in _validPairs.Pairs)
                 {
                     await _webSocketClient.SubscribeOrderBook(pair, cancellationToken);
                 }
-                else
-                {
-                    Console.WriteLine($"Pair {pair} is not valid.");
-                }
-            }
 
-            Task.Run(() => _webSocketClient.ReceiveMessages(cancellationToken), cancellationToken);
+                Task.Run(() => _webSocketClient.ReceiveMessages(cancellationToken), cancellationToken);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
         }
 
-        public async Task HandleWebSocketMessageAsync(string message)
-        {
-            var orderBookUpdate = JsonSerializer.Deserialize<OrderBookUpdate>(message);
-            if (orderBookUpdate != null && orderBookUpdate.Event == "data")
+            public async Task HandleWebSocketMessageAsync(string message)
             {
-                var pair = orderBookUpdate.Channel.Replace("order_book_", "").ToLower();
-                if (!_validPairs.Pairs.Contains(pair))
+                var orderBookUpdate = JsonSerializer.Deserialize<OrderBookUpdate>(message);
+                if (orderBookUpdate != null && orderBookUpdate.Event == "data")
                 {
-                    return;
-                }
-                var orderBook = new OrderBook(
-                    pair,
-                    DateTimeOffset.FromUnixTimeSeconds(long.Parse(orderBookUpdate.Data.Timestamp)).UtcDateTime
-                );
+                    var pair = orderBookUpdate.Channel.Replace("order_book_", "").ToLower();
+                    if (!_validPairs.Pairs.Contains(pair))
+                    {
+                        return;
+                    }
+                    var orderBook = new OrderBook(
+                        pair,
+                        DateTimeOffset.FromUnixTimeSeconds(long.Parse(orderBookUpdate.Data.Timestamp)).UtcDateTime
+                    );
 
-                foreach (var ask in orderBookUpdate.Data.Asks)
-                {
-                    orderBook.AddAsk(new Order(decimal.Parse(ask[0]), decimal.Parse(ask[1]), pair));
-                }
+                    foreach (var ask in orderBookUpdate.Data.Asks)
+                    {
+                        orderBook.AddAsk(new Order(decimal.Parse(ask[0]), decimal.Parse(ask[1]), pair));
+                    }
 
-                foreach (var bid in orderBookUpdate.Data.Bids)
-                {
-                    orderBook.AddBid(new Order(decimal.Parse(bid[0]), decimal.Parse(bid[1]), pair));
-                }
+                    foreach (var bid in orderBookUpdate.Data.Bids)
+                    {
+                        orderBook.AddBid(new Order(decimal.Parse(bid[0]), decimal.Parse(bid[1]), pair));
+                    }
 
-                _orderBooks[orderBook.Pair] = orderBook;
-               
-                await _orderBookRepository.InsertOrderBookAsync(orderBook);
+                    _orderBooks[orderBook.Pair] = orderBook;
+
+                    await _orderBookRepository.InsertOrderBookAsync(orderBook);
+                }
             }
         }
     }
-}

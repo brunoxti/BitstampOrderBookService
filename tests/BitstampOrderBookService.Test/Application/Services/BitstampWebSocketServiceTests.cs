@@ -202,7 +202,15 @@ namespace BitstampOrderBookService.Tests.UnitTests.Application.Services
             _mockOrderBookRepository.Verify(repo => repo.InsertOrderBookAsync(It.Is<OrderBook>(ob => ob.Pair == "btcusd" && ob.Asks.Count == 1 && ob.Bids.Count == 1)), Times.Once);
         }
 
+        [Fact]
+        public void Constructor_Should_ThrowArgumentNullException_When_ValidPairsOptionsIsNull()
+        {
+            // Arrange & Act
+            Action act = () => new BitstampWebSocketService(_mockWebSocketClient.Object, _mockOrderBookRepository.Object, null);
 
+            // Assert
+            Assert.Throws<ArgumentNullException>(act);
+        }
 
     }
 }
