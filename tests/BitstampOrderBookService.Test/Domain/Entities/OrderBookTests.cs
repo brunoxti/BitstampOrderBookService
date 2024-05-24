@@ -102,5 +102,46 @@ namespace BitstampOrderBookService.Tests.UnitTests
             Assert.Single(bids);
             Assert.Contains(bid, bids);
         }
+
+        [Fact]
+        public void Constructor_Should_InitializeAsksAndBids()
+        {
+            // Act
+            var orderBook = new OrderBook();
+
+            // Assert
+            Assert.NotNull(orderBook.Asks);
+            Assert.NotNull(orderBook.Bids);
+            Assert.Empty(orderBook.Asks);
+            Assert.Empty(orderBook.Bids);
+        }
+
+        [Fact]
+        public void AddAsk_Should_NotThrowException_When_AskIsNull()
+        {
+            // Arrange
+            var orderBook = new OrderBook();
+
+            // Act
+            orderBook.AddAsk(null);
+
+            // Assert
+            Assert.Single(orderBook.Asks);
+        }
+
+        [Fact]
+        public void AddBid_Should_NotThrowException_When_BidIsNull()
+        {
+            // Arrange
+            var orderBook = new OrderBook();
+
+            // Act
+            orderBook.AddBid(null);
+
+            // Assert
+            Assert.Single(orderBook.Bids);
+        }
+
+
     }
 }

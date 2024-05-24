@@ -114,5 +114,17 @@ namespace BitstampOrderBookService.Tests.UnitTests.Application.Services
             Assert.Contains(results, r => r.Pair == "btcusd");
             Assert.Contains(results, r => r.Pair == "ethusd");
         }
+
+        [Fact]
+        public async Task SimulatePriceAsync_OrderBookNotFound_ThrowsException()
+        {
+            // Arrange
+            _mockOrderBookRepository.Setup(r => r.FindOrderBooksAsync(It.IsAny<FilterDefinition<OrderBook>>(), null))
+                .ReturnsAsync(new List<OrderBook>());
+
+            // Act & Assert
+            await Assert.ThrowsAsync<Exception>(() => _pricingService.SimulatePriceAsync("btcusd", "buy", 1));
+        }
+
     }
 }
