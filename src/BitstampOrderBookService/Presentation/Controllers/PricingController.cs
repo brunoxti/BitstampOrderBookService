@@ -15,7 +15,7 @@ namespace BitstampOrderBookService.Presentation.Controllers
         }
 
         [HttpGet("simulate")]
-        public async Task<IActionResult> SimulateBestPrice(string operation, string instrument, int quantity)
+        public async Task<IActionResult> SimulateBestPrice(string operation, string instrument, decimal quantity)
         {
             try
             {
