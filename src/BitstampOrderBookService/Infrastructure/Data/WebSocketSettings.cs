@@ -2,6 +2,6 @@
 {
     public class WebSocketSettings
     {
-        public string[] Instruments { get; set; }
+        public string Uri { get; set; }
     }
 }
