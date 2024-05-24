@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using BitstampOrderBookService.Application.DTOs;
@@ -39,16 +40,14 @@ namespace BitstampOrderBookService.Tests.UnitTests
         public async Task ConnectAsync_Should_SubscribeToOrderBooks()
         {
             // Arrange
-            var pairs = new[] { "btcusd", "ethusd" };
             var uri = "wss://ws.bitstamp.net";
-            
             var cancellationToken = CancellationToken.None;
 
             // Act
             await _service.ConnectAsync(uri, cancellationToken);
 
             // Assert
-            foreach (var pair in pairs)
+            foreach (var pair in _validPairsOptions.Value.Pairs)
             {
                 _mockWebSocketClient.Verify(client => client.SubscribeOrderBook(pair, cancellationToken), Times.Once);
             }
@@ -81,6 +80,128 @@ namespace BitstampOrderBookService.Tests.UnitTests
             // Assert
             _mockOrderBookRepository.Verify(repo => repo.InsertOrderBookAsync(It.IsAny<OrderBook>()), Times.Never);
         }
+        [Fact]
+        public async Task ConnectAsync_Should_NotSubscribeToInvalidPairs()
+        {
+            // Arrange
+            var validPairsOptions = Options.Create(new ValidPairsOptions
+            {
+                Pairs = new List<string> { "btcusd" }
+            });
+
+            var service = new BitstampWebSocketService(_mockWebSocketClient.Object, _mockOrderBookRepository.Object, validPairsOptions);
+            var uri = "wss://ws.bitstamp.net";
+            var cancellationToken = CancellationToken.None;
+
+            // Act
+            await service.ConnectAsync(uri, cancellationToken);
+
+            // Assert
+            _mockWebSocketClient.Verify(client => client.SubscribeOrderBook("btcusd", cancellationToken), Times.Once);
+            _mockWebSocketClient.Verify(client => client.SubscribeOrderBook("invalidpair", cancellationToken), Times.Never);
+        }
+
+        [Fact]
+        public async Task HandleWebSocketMessageAsync_Should_NotProcessMessageWithInvalidTimestamp()
+        {
+            // Arrange
+            var invalidTimestampMessage = "{\"event\":\"data\",\"channel\":\"order_book_btcusd\",\"data\":{\"timestamp\":\"invalid\",\"bids\":[[\"30000.0\",\"0.5\"]],\"asks\":[[\"31000.0\",\"1.0\"]]}}";
+
+            // Act & Assert
+            await Assert.ThrowsAsync<FormatException>(() => _service.HandleWebSocketMessageAsync(invalidTimestampMessage));
+        }
+
+        [Fact]
+        public async Task HandleWebSocketMessageAsync_Should_NotProcessMessageWithInvalidPrice()
+        {
+            // Arrange
+            var invalidPriceMessage = "{\"event\":\"data\",\"channel\":\"order_book_btcusd\",\"data\":{\"timestamp\":\"1609459200\",\"bids\":[[\"invalid\",\"0.5\"]],\"asks\":[[\"31000.0\",\"1.0\"]]}}";
+
+            // Act & Assert
+            await Assert.ThrowsAsync<FormatException>(() => _service.HandleWebSocketMessageAsync(invalidPriceMessage));
+        }
+
+        [Fact]
+        public async Task HandleWebSocketMessageAsync_Should_NotProcessMessageWithInvalidQuantity()
+        {
+            // Arrange
+            var invalidQuantityMessage = "{\"event\":\"data\",\"channel\":\"order_book_btcusd\",\"data\":{\"timestamp\":\"1609459200\",\"bids\":[[\"30000.0\",\"invalid\"]],\"asks\":[[\"31000.0\",\"1.0\"]]}}";
+
+            // Act & Assert
+            await Assert.ThrowsAsync<FormatException>(() => _service.HandleWebSocketMessageAsync(invalidQuantityMessage));
+        }
+
+        [Fact]
+        public async Task HandleWebSocketMessageAsync_Should_IgnoreUnknownChannel()
+        {
+            // Arrange
+            var message = "{\"event\":\"data\",\"channel\":\"unknown_channel\",\"data\":{\"timestamp\":\"1609459200\",\"bids\":[[\"30000.0\",\"0.5\"]],\"asks\":[[\"31000.0\",\"1.0\"]]}}";
+
+            // Act
+            await _service.HandleWebSocketMessageAsync(message);
+
+            // Assert
+            _mockOrderBookRepository.Verify(repo => repo.InsertOrderBookAsync(It.IsAny<OrderBook>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ConnectAsync_Should_HandleValidAndInvalidPairs()
+        {
+            // Arrange
+            var validPairsOptions = Options.Create(new ValidPairsOptions
+            {
+                Pairs = new List<string> { "btcusd", "ethusd" }
+            });
+
+            var service = new BitstampWebSocketService(_mockWebSocketClient.Object, _mockOrderBookRepository.Object, validPairsOptions);
+            var uri = "wss://ws.bitstamp.net";
+            var cancellationToken = CancellationToken.None;
+
+            // Act
+            await service.ConnectAsync(uri, cancellationToken);
+
+            // Assert
+            _mockWebSocketClient.Verify(client => client.SubscribeOrderBook("btcusd", cancellationToken), Times.Once);
+            _mockWebSocketClient.Verify(client => client.SubscribeOrderBook("ethusd", cancellationToken), Times.Once);
+            _mockWebSocketClient.Verify(client => client.SubscribeOrderBook("invalidpair", cancellationToken), Times.Never);
+        }
+
+        [Fact]
+        public async Task HandleWebSocketMessageAsync_Should_NotProcessMessageWithNullEvent()
+        {
+            // Arrange
+            var message = "{\"channel\":\"order_book_btcusd\",\"data\":{\"timestamp\":\"1609459200\",\"bids\":[[\"30000.0\",\"0.5\"]],\"asks\":[[\"31000.0\",\"1.0\"]]}}";
+
+            // Act
+            await _service.HandleWebSocketMessageAsync(message);
+
+            // Assert
+            _mockOrderBookRepository.Verify(repo => repo.InsertOrderBookAsync(It.IsAny<OrderBook>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task HandleWebSocketMessageAsync_Should_ThrowExceptionForInvalidJson()
+        {
+            // Arrange
+            var invalidJsonMessage = "{\"event\":\"data\",\"channel\":\"order_book_btcusd\",\"data\":\"invalidjson\"}";
+
+            // Act & Assert
+            await Assert.ThrowsAsync<JsonException>(() => _service.HandleWebSocketMessageAsync(invalidJsonMessage));
+        }
+
+        [Fact]
+        public async Task HandleWebSocketMessageAsync_Should_ProcessValidOrderBookUpdate()
+        {
+            // Arrange
+            var message = "{\"event\":\"data\",\"channel\":\"order_book_btcusd\",\"data\":{\"timestamp\":\"1609459200\",\"bids\":[[\"30000.0\",\"0.5\"]],\"asks\":[[\"31000.0\",\"1.0\"]]}}";
+
+            // Act
+            await _service.HandleWebSocketMessageAsync(message);
+
+            // Assert
+            _mockOrderBookRepository.Verify(repo => repo.InsertOrderBookAsync(It.Is<OrderBook>(ob => ob.Pair == "btcusd" && ob.Asks.Count == 1 && ob.Bids.Count == 1)), Times.Once);
+        }
+
 
     }
 }
