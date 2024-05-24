@@ -9,7 +9,7 @@ using Moq;
 using Xunit;
 using Microsoft.Extensions.Logging;
 
-namespace BitstampOrderBookService.Tests.UnitTests
+namespace BitstampOrderBookService.Tests.UnitTests.Infraestruture.RepositoryTest
 {
     public class OrderBookRepositoryTests
     {

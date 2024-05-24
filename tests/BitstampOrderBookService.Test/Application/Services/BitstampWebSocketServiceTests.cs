@@ -14,7 +14,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
-namespace BitstampOrderBookService.Tests.UnitTests
+namespace BitstampOrderBookService.Tests.UnitTests.Application.Services
 {
     public class BitstampWebSocketServiceTests
     {
@@ -201,6 +201,7 @@ namespace BitstampOrderBookService.Tests.UnitTests
             // Assert
             _mockOrderBookRepository.Verify(repo => repo.InsertOrderBookAsync(It.Is<OrderBook>(ob => ob.Pair == "btcusd" && ob.Asks.Count == 1 && ob.Bids.Count == 1)), Times.Once);
         }
+
 
 
     }

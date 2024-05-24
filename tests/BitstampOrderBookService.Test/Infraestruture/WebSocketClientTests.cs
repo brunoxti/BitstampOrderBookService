@@ -5,7 +5,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 
-namespace BitstampOrderBookService.Tests.UnitTests
+namespace BitstampOrderBookService.Tests.UnitTests.Infraestruture
 {
     public class WebSocketClientTests
     {

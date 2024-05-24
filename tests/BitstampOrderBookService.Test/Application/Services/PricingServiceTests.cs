@@ -5,7 +5,7 @@ using BitstampOrderBookService.Domain.Entities;
 using BitstampOrderBookService.Domain.ValueObjects;
 using BitstampOrderBookService.Infrastructure.Repository;
 
-namespace BitstampOrderBookService.Tests.UnitTests
+namespace BitstampOrderBookService.Tests.UnitTests.Application.Services
 {
     public class PricingServiceTests
     {

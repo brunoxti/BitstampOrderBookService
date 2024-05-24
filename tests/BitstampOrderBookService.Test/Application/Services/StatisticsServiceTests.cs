@@ -5,7 +5,7 @@ using MongoDB.Driver;
 using Moq;
 
 
-namespace BitstampOrderBookService.Tests.UnitTests
+namespace BitstampOrderBookService.Tests.UnitTests.Application.Services
 {
     public class StatisticsServiceTests
     {

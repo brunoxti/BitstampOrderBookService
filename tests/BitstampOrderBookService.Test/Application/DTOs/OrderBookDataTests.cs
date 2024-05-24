@@ -1,7 +1,5 @@
 ﻿using BitstampOrderBookService.Application.DTOs;
-using System.Collections.Generic;
 using System.Text.Json;
-using Xunit;
 
 namespace BitstampOrderBookService.Tests.UnitTests
 {
