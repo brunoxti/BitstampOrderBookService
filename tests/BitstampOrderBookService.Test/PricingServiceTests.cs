@@ -80,5 +80,39 @@ namespace BitstampOrderBookService.Tests.UnitTests
             // Act & Assert
             await Assert.ThrowsAsync<Exception>(() => _pricingService.SimulatePriceAsync("btcusd", "buy", 1));
         }
+
+        [Fact]
+        public async Task GetAllSimulationsAsync_Should_ReturnAllSimulations()
+        {
+            // Arrange
+            var mockAsyncCursor = new Mock<IAsyncCursor<PriceSimulationResult>>();
+            var simulationResults = new List<PriceSimulationResult>
+            {
+                new PriceSimulationResult { Pair = "btcusd" },
+                new PriceSimulationResult { Pair = "ethusd" }
+            };
+
+            mockAsyncCursor.Setup(_ => _.Current).Returns(simulationResults);
+            mockAsyncCursor
+                .SetupSequence(_ => _.MoveNext(It.IsAny<CancellationToken>()))
+                .Returns(true)
+                .Returns(false);
+            mockAsyncCursor
+                .SetupSequence(_ => _.MoveNextAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(true))
+                .Returns(Task.FromResult(false));
+
+            _mockSimulationResultsCollection
+                .Setup(c => c.FindAsync(It.IsAny<FilterDefinition<PriceSimulationResult>>(), It.IsAny<FindOptions<PriceSimulationResult>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockAsyncCursor.Object);
+
+            // Act
+            var results = await _pricingService.GetAllSimulationsAsync();
+
+            // Assert
+            Assert.Equal(2, results.Count);
+            Assert.Contains(results, r => r.Pair == "btcusd");
+            Assert.Contains(results, r => r.Pair == "ethusd");
+        }
     }
 }
