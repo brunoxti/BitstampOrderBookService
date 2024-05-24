@@ -1,8 +1,10 @@
 ﻿using BitstampOrderBookService.Application.DTOs;
 using BitstampOrderBookService.Application.Interfaces;
+using BitstampOrderBookService.Configuration;
 using BitstampOrderBookService.Domain.Entities;
 using BitstampOrderBookService.Infrastructure.Repository;
 using BitstampOrderBookService.Infrastructure.WebSocket;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using System.Collections.Concurrent;
 using System.Text.Json;
@@ -11,33 +13,36 @@ namespace BitstampOrderBookService.Application.Services
 {
     public class BitstampWebSocketService : IBitstampWebSocketService
     {
-        private readonly IWebSocketClient _webSocketClient;
         private readonly IOrderBookRepository _orderBookRepository;
+        private IWebSocketClient _webSocketClient;
         private readonly ConcurrentDictionary<string, OrderBook> _orderBooks = new();
+        private readonly ValidPairsOptions _validPairs;
 
-        public BitstampWebSocketService(IWebSocketClient webSocketClient, IOrderBookRepository orderBookRepository)
+        public BitstampWebSocketService(IWebSocketClient webSocketClient, IOrderBookRepository orderBookRepository, IOptions<ValidPairsOptions> validPairsOptions)
         {
-            _webSocketClient = webSocketClient;
             _orderBookRepository = orderBookRepository;
+            _validPairs = validPairsOptions?.Value ?? throw new ArgumentNullException(nameof(validPairsOptions));
+            _webSocketClient = webSocketClient;
+            _webSocketClient.OnMessageReceived += async (message) => await HandleWebSocketMessageAsync(message);
         }
-
-        public async Task ConnectAsync(string[] pairs, CancellationToken cancellationToken)
+        
+        public async Task ConnectAsync(string uri, CancellationToken cancellationToken)
         {
-          
+            await _webSocketClient.ConnectAsync(new Uri(uri), cancellationToken);
 
-            await _webSocketClient.ConnectAsync(new Uri("wss://ws.bitstamp.net"), CancellationToken.None);
-
-            foreach (var pair in pairs)
+            foreach (var pair in _validPairs.Pairs)
             {
-                await _webSocketClient.SubscribeOrderBook(pair);
+                if (_validPairs.Pairs.Contains(pair.ToLower()))
+                {
+                    await _webSocketClient.SubscribeOrderBook(pair, cancellationToken);
+                }
+                else
+                {
+                    Console.WriteLine($"Pair {pair} is not valid.");
+                }
             }
 
-            _webSocketClient.OnMessageReceived += async (message) =>
-            {
-                await HandleWebSocketMessageAsync(message);
-            };
-
-            await _webSocketClient.ReceiveMessages(cancellationToken);
+            Task.Run(() => _webSocketClient.ReceiveMessages(cancellationToken), cancellationToken);
         }
 
         public async Task HandleWebSocketMessageAsync(string message)
@@ -45,7 +50,8 @@ namespace BitstampOrderBookService.Application.Services
             var orderBookUpdate = JsonSerializer.Deserialize<OrderBookUpdate>(message);
             if (orderBookUpdate != null && orderBookUpdate.Event == "data")
             {
-                var pair = orderBookUpdate.Channel.Replace("order_book_", "").ToLower(); // Usar minúsculas para consistência
+                var pair = orderBookUpdate.Channel.Replace("order_book_", "").ToLower();
+                
                 var orderBook = new OrderBook(
                     pair,
                     DateTimeOffset.FromUnixTimeSeconds(long.Parse(orderBookUpdate.Data.Timestamp)).UtcDateTime
@@ -62,6 +68,7 @@ namespace BitstampOrderBookService.Application.Services
                 }
 
                 _orderBooks[orderBook.Pair] = orderBook;
+               
                 await _orderBookRepository.InsertOrderBookAsync(orderBook);
             }
         }

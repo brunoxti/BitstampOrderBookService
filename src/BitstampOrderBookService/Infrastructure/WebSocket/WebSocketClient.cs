@@ -6,8 +6,9 @@ namespace BitstampOrderBookService.Infrastructure.WebSocket
 {
     public class WebSocketClient : IWebSocketClient
     {
-        private readonly ClientWebSocket _clientWebSocket;
+        private ClientWebSocket _clientWebSocket;
         private readonly ILogger<WebSocketClient> _logger;
+        private readonly object _syncRoot = new();
 
         public WebSocketState State => _clientWebSocket.State;
 
@@ -16,7 +17,6 @@ namespace BitstampOrderBookService.Infrastructure.WebSocket
             _clientWebSocket = new ClientWebSocket();
             _logger = logger;
         }
-
 
         public event Action<string> OnMessageReceived;
 
@@ -27,9 +27,24 @@ namespace BitstampOrderBookService.Infrastructure.WebSocket
 
         public async Task ConnectAsync(Uri uri, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Connecting to WebSocket...");
-            await _clientWebSocket.ConnectAsync(uri, cancellationToken);
-            _logger.LogInformation("WebSocket connection established.");
+            try 
+            {
+                lock (_syncRoot)
+                {
+                    if (_clientWebSocket == null || _clientWebSocket.State != WebSocketState.Open)
+                    {
+                        _clientWebSocket?.Dispose();
+                        _clientWebSocket = new ClientWebSocket();
+                    }
+                }
+
+                _logger.LogInformation("Connecting to WebSocket...");
+                await _clientWebSocket.ConnectAsync(uri, cancellationToken);
+                _logger.LogInformation("WebSocket connection established.");
+            } catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
 
         public async Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken cancellationToken)
@@ -52,7 +67,7 @@ namespace BitstampOrderBookService.Infrastructure.WebSocket
             await _clientWebSocket.SendAsync(buffer, messageType, endOfMessage, cancellationToken);
         }
 
-        public async Task SubscribeOrderBook(string pair)
+        public async Task SubscribeOrderBook(string pair, CancellationToken cancellationToken)
         {
             var subscribeMessage = new
             {
@@ -67,7 +82,8 @@ namespace BitstampOrderBookService.Infrastructure.WebSocket
             var segment = new ArraySegment<byte>(bytes);
 
             _logger.LogInformation($"Subscribing to channel: order_book_{pair}");
-            await SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+            await SendAsync(segment, WebSocketMessageType.Text, true, cancellationToken);
+
         }
 
         public async Task ReceiveMessages(CancellationToken cancellationToken)
@@ -75,12 +91,12 @@ namespace BitstampOrderBookService.Infrastructure.WebSocket
             var buffer = new byte[1024 * 16];
             var stringBuilder = new StringBuilder();
 
-            while (_clientWebSocket.State == WebSocketState.Open)
+            while (State == WebSocketState.Open)
             {
                 var result = await _clientWebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    await _clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken);
+                    await CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken);
                 }
                 else
                 {
